@@ -2,27 +2,26 @@
 - name: Monitoring setup
   tags: monitoring
   block:
-    - name: Add Prometheus Community Helm repository
-      kubernetes.core.helm_repository:
-        name: prometheus-community
-        repo_url: https://prometheus-community.github.io/helm-charts
-        
-    - name: Add Metrics Server Helm repository
-      kubernetes.core.helm_repository:
-        name: metrics-server
-        repo_url: https://kubernetes-sigs.github.io/metrics-server/
-        
-    - name: Add Kubernetes Dashboard Helm repository
-      kubernetes.core.helm_repository:
-        name: kubernetes-dashboard
-        repo_url: https://kubernetes.github.io/dashboard/
-        
-    - name: Update Helm repositories
-      shell: helm repo update
+    # -------------------------------------------------------
+    # 步骤 1: 将本地下载好的 Chart 文件夹分发到目标机器
+    # -------------------------------------------------------
+    - name: Copy Prometheus chart to remote node
+      ansible.builtin.copy:
+        # 注意: 这里的路径对应你上面"准备工作"下载的位置
+        # src 不带斜杠表示拷贝整个目录
+        src: {{ playbook_dir }}/../roles/chutes-gpu/files/prometheus-27.50.1.tgz
+        dest: /tmp/
+        mode: '0755'
+
+    - name: Copy Kubernetes Dashboard chart to remote node
+      ansible.builtin.copy:
+        src: {{ playbook_dir }}/../roles/chutes-gpu/files/kubernetes-dashboard-7.14.0.tgz
+        dest: /tmp/
+        mode: '0755'
 
     - name: Install Prometheus
       shell: |
-        helm upgrade --install prometheus prometheus-community/prometheus \
+        helm upgrade --install prometheus /tmp/prometheus-27.50.1.tgz \
           --namespace monitoring \
           --create-namespace \
           --set server.persistentVolume.enabled=false \
@@ -34,7 +33,7 @@
 
     - name: Install kubernetes dashboard
       shell: |
-        helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
+        helm upgrade --install kubernetes-dashboard /tmp/kubernetes-dashboard-7.14.0.tgz  \
           --create-namespace \
           --namespace kubernetes-dashboard \
           --set persistence.enabled=false \
