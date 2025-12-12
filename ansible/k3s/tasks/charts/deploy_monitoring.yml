@@ -4,12 +4,12 @@
   block:
 
     - name: Add Chutes Helm repository
-      kubernetes.core.helm_repository:
-        name: chutes
-        repo_url: https://chutesai.github.io/chutes-miner
-
-    - name: Update Helm repositories
-      shell: helm repo update
+      ansible.builtin.copy:
+        # 注意: 这里的路径对应你上面"准备工作"下载的位置
+        # src 不带斜杠表示拷贝整个目录
+        src: /root/test/chutes-miner/ansible/k3s/tasks/charts/chutes-monitoring-0.1.0.tgz
+        dest: /tmp/
+        mode: '0755'
 
     - name: Generate Monitoring Host Helm values
       ansible.builtin.template:
@@ -27,7 +27,7 @@
 
     - name: Install or upgrade Monitoring
       ansible.builtin.command: >
-        helm upgrade --install monitoring chutes/chutes-monitoring
+        helm upgrade --install monitoring /tmp/chutes-monitoring-0.1.0.tgz
         --namespace {{ monitoring_namespace }}
         --kubeconfig {{ k3s_kubeconfig_path }}
         --create-namespace
