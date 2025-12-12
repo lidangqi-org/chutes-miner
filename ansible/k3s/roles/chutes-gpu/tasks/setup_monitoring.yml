@@ -9,13 +9,13 @@
       ansible.builtin.copy:
         # 注意: 这里的路径对应你上面"准备工作"下载的位置
         # src 不带斜杠表示拷贝整个目录
-        src: {{ playbook_dir }}/../roles/chutes-gpu/files/prometheus-27.50.1.tgz
+        src: /root/test/chutes-miner/ansible/k3s/roles/chutes-gpu/files/prometheus-27.50.1.tgz
         dest: /tmp/
         mode: '0755'
 
     - name: Copy Kubernetes Dashboard chart to remote node
       ansible.builtin.copy:
-        src: {{ playbook_dir }}/../roles/chutes-gpu/files/kubernetes-dashboard-7.14.0.tgz
+        src: /root/test/chutes-miner/ansible/k3s/roles/chutes-gpu/files/kubernetes-dashboard-7.14.0.tgz
         dest: /tmp/
         mode: '0755'
 
