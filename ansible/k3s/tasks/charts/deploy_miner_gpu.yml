@@ -1,10 +1,10 @@
 - name: Add Chutes Helm repository
-  kubernetes.core.helm_repository:
-    name: chutes
-    repo_url: https://chutesai.github.io/chutes-miner
-
-- name: Update Helm repositories
-  shell: helm repo update
+  ansible.builtin.copy:
+    # 注意: 这里的路径对应你上面"准备工作"下载的位置
+    # src 不带斜杠表示拷贝整个目录
+    src: /root/test/chutes-miner/ansible/k3s/tasks/charts/chutes-miner-gpu-0.1.7.tgz
+    dest: /tmp/
+    mode: '0755'
 
 - name: Copy custom values
   ansible.builtin.copy:
@@ -16,7 +16,7 @@
 
 - name: Install or upgrade Chutes GPU charts
   ansible.builtin.command: >
-    helm upgrade --install chutes chutes/chutes-miner-gpu
+    helm upgrade --install chutes /tmp/chutes-miner-gpu-0.1.7.tgz
     --namespace chutes
     --kubeconfig {{ k3s_kubeconfig_path }}
     --create-namespace
