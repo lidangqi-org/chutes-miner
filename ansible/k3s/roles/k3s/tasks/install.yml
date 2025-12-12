@@ -14,9 +14,10 @@
 - name: Download artifact only if needed
   when: not ansible_check_mode and (k3s_version_output.rc != 0 or installed_k3s_version is version(k3s_version, '<'))
   block:
-    - name: Download K3s install script
+    # [修改点 1]：使用国内 Rancher 镜像源下载安装脚本
+    - name: Download K3s install script (Domestic Source)
       ansible.builtin.get_url:
-        url: https://get.k3s.io/
+        url: https://rancher-mirror.rancher.cn/k3s/k3s-install.sh
         timeout: 120
         dest: /usr/local/bin/k3s-install.sh
         owner: root
@@ -25,6 +26,7 @@
 
     - name: Download K3s binary for single node
       ansible.builtin.command:
+        # 这里的参数依然保留你原来的写法，完全没问题
         argv:
           - /usr/local/bin/k3s-install.sh
           - --write-kubeconfig-mode 644
@@ -35,6 +37,8 @@
       environment:
         INSTALL_K3S_SKIP_START: "true"
         INSTALL_K3S_VERSION: "{{ k3s_version }}"
+        # [修改点 2]：这一行至关重要！它告诉脚本从国内阿里云/Rancher源拉取二进制文件
+        INSTALL_K3S_MIRROR: cn
       changed_when: true
 
 - name: Add K3s autocomplete to user bashrc
@@ -44,6 +48,64 @@
     regexp: \.\s+<\(k3s completion bash\)
     line: ". <(k3s completion bash)  # Added by k3s-ansible"
 
+# 2. 配置逻辑 (在此处插入 registries.yaml)
+- name: Setup config file
+  # 注意：这里去掉了 when 条件，确保即使 config.yaml 未定义，registries.yaml 也能被创建
+  # 或者你可以保留 block 的 when，把 registries 任务单独拿出来
+  block:
+    - name: Make config directory
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        mode: "0755"
+        state: directory
+
+    # [新增任务]：配置国内镜像加速 (registries.yaml)
+    # 这将解决 docker.io, k8s.gcr.io 等被墙的问题
+    - name: Create K3s registries.yaml for China Mirror
+      ansible.builtin.copy:
+        dest: /etc/rancher/k3s/registries.yaml
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          mirrors:
+            cr.l5d.io:
+              endpoint:
+                - "https://l5d.m.daocloud.io"
+            docker.elastic.co:
+              endpoint:
+                - "https://elastic.m.daocloud.io"
+            docker.io:
+              endpoint:
+                - "https://docker.m.daocloud.io"
+            gcr.io:
+              endpoint:
+                - "https://gcr.m.daocloud.io"
+            ghcr.io:
+              endpoint:
+                - "https://ghcr.m.daocloud.io"
+            k8s.gcr.io:
+              endpoint:
+                - "https://k8s-gcr.m.daocloud.io"
+            registry.k8s.io:
+              endpoint:
+                - "https://k8s.m.daocloud.io"
+            mcr.microsoft.com:
+              endpoint:
+                - "https://mcr.m.daocloud.io"
+            nvcr.io:
+              endpoint:
+                - "https://nvcr.m.daocloud.io"
+            quay.io:
+              endpoint:
+                - "https://quay.m.daocloud.io"
+            registry.jujucharms.com:
+              endpoint:
+                - "https://jujucharms.m.daocloud.io"
+            rocks.canonical.com:
+              endpoint:
+                - "https://rocks-canonical.m.daocloud.io"
+                
 - name: Setup config file
   when: k3s_server_config_yaml is defined
   block:
