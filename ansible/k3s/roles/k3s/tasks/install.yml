@@ -69,6 +69,9 @@
         mode: "0644"
         content: |
           mirrors:
+            5dt7hz7zpw4dpppxfm7ke3cm7sdawhszxmm5zame7dsvjbcq.localregistry.chutes.ai:30500:
+              endpoint:
+                - "http://5dt7hz7zpw4dpppxfm7ke3cm7sdawhszxmm5zame7dsvjbcq.localregistry.chutes.ai:30500"
             cr.l5d.io:
               endpoint:
                 - "https://l5d.m.daocloud.io"
@@ -106,7 +109,11 @@
             rocks.canonical.com:
               endpoint:
                 - "https://rocks-canonical.m.daocloud.io"
-                
+          configs:
+            "5dt7hz7zpw4dpppxfm7ke3cm7sdawhszxmm5zame7dsvjbcq.localregistry.chutes.ai:30500":
+               tls:
+                 insecure_skip_verify: true    
+                 
 - name: Setup config file
   when: k3s_server_config_yaml is defined
   block:
