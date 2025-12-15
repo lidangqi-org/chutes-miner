@@ -79,7 +79,6 @@
               endpoint:
                 - "https://docker.m.daocloud.io"
                 - "https://docker.1ms.run"
-                - "https://ccr.ccs.tencentyun.com"
             gcr.io:
               endpoint:
                 - "https://gcr.m.daocloud.io"
